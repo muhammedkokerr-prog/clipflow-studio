@@ -1,0 +1,29 @@
+services:
+  redis:
+    network_mode: host
+    command:
+      - redis-server
+      - --port
+      - "16379"
+      - --bind
+      - 0.0.0.0
+      - --protected-mode
+      - "no"
+      - --requirepass
+      - ${REDIS_PASSWORD}
+      - --appendonly
+      - "yes"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "16379", "-a", "${REDIS_PASSWORD}", "--no-auth-warning", "ping"]
+
+  api:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      REDIS_URL: redis://:${REDIS_PASSWORD}@host.docker.internal:16379/0
+
+  worker:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      REDIS_URL: redis://:${REDIS_PASSWORD}@host.docker.internal:16379/0
